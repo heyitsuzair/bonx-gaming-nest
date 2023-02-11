@@ -7,6 +7,7 @@ import {
   Param,
   Get,
   Delete,
+  Put,
 } from '@nestjs/common';
 import { Post, Body } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express/multer';
@@ -85,5 +86,36 @@ export class GamesController {
   @UseGuards(JwtAuthGuard)
   delete(@Param('id') id: string, @Req() req: Request) {
     return this.gamesService.delete(id, req.headers.authorization);
+  }
+  @Put('/:id')
+  @UseGuards(JwtAuthGuard)
+  // You're not actually providing a file, but the interceptor will expect "form data"
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'game_file', maxCount: 1 },
+        { name: 'banner', maxCount: 1 },
+      ],
+      multerOptions,
+    ),
+  )
+  update(
+    @Body() body: CreateGameDto,
+    @UploadedFiles()
+    files: {
+      game_file?: any;
+      banner?: any;
+    },
+    @Param('id') id: string,
+    @Req() req: Request,
+  ) {
+    body.banner = files.banner ? files.banner[0].filename : null;
+    body.game_file = files.game_file
+      ? {
+          filename: files.game_file[0].filename,
+          size: files.game_file[0].size,
+        }
+      : null;
+    return this.gamesService.update(body, req.headers.authorization, id);
   }
 }
