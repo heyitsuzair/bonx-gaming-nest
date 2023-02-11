@@ -6,6 +6,7 @@ import {
   Req,
   Param,
   Get,
+  Delete,
 } from '@nestjs/common';
 import { Post, Body } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express/multer';
@@ -64,8 +65,25 @@ export class GamesController {
     return this.gamesService.create(body, req.headers.authorization);
   }
 
+  @Get()
+  readGames() {
+    return this.gamesService.readGames();
+  }
+
+  @Get('/owner')
+  @UseGuards(JwtAuthGuard)
+  readOwnerGames(@Req() req: Request) {
+    return this.gamesService.readOwnerGames(req.headers.authorization);
+  }
+
   @Get('/:id')
   readGame(@Param('id') id: string) {
     return this.gamesService.readGame(id);
+  }
+
+  @Delete('/:id')
+  @UseGuards(JwtAuthGuard)
+  delete(@Param('id') id: string, @Req() req: Request) {
+    return this.gamesService.delete(id, req.headers.authorization);
   }
 }

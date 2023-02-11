@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ModelsName } from 'config';
 import { Model } from 'mongoose';
@@ -14,7 +19,7 @@ export class GamesService {
   ) {}
   async create(body: CreateGameDto, token: any) {
     /**
-     * Check Whether The Owner Is Trying To Update His Profile
+     * Get Owner ID From JWT
      */
     const loggedInUser: any = this.jwtService.decode(token.split(' ')[1]);
 
@@ -24,13 +29,65 @@ export class GamesService {
 
     return { msg: 'Game Added!' };
   }
-  async readGame(id) {
+  async readGame(id: string) {
+    try {
+      const game = await this.gamesModel.findById(id);
+
+      if (!game) {
+        throw new NotFoundException('Game Not Found!');
+      }
+
+      return game;
+    } catch (error) {
+      throw new HttpException({ msg: 'Game Not Found' }, 404);
+    }
+  }
+  async readGames() {
+    const games = await this.gamesModel.find();
+
+    return games;
+  }
+  async readOwnerGames(token: any) {
     /**
-     * Check Whether The Owner Is Trying To Update His Profile
+     * Get Owner ID From JWT
      */
+    const loggedInUser: any = this.jwtService.decode(token.split(' ')[1]);
 
-    const game = await this.gamesModel.findById(id);
+    const owner_id = loggedInUser.user_id;
+    const games = await this.gamesModel.find({ owner_id });
 
-    return game;
+    return games;
+  }
+
+  async delete(id: string, token: any) {
+    try {
+      /**
+       * Find Game
+       */
+      const game: any = await this.gamesModel.findById(id);
+
+      if (!game) {
+        throw new NotFoundException('Game Not Found!');
+      }
+
+      /**
+       * Check Whether The Owner Is Trying To Delete
+       *
+       * @true  Continue
+       *
+       * @false @throw Exception
+       */
+      const loggedInUser: any = this.jwtService.decode(token.split(' ')[1]);
+
+      if (!game.owner_id.equals(loggedInUser.user_id)) {
+        throw new UnauthorizedException('Unauthorized!');
+      }
+
+      game.delete();
+
+      return { msg: 'Game Deleted!' };
+    } catch ({ response }) {
+      throw new HttpException({ msg: response.message }, response.statusCode);
+    }
   }
 }
