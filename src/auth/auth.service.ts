@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -7,7 +8,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { ModelsName } from 'config';
 import { Model } from 'mongoose';
-import { LoginDto, SignupDTO } from './dto';
+import { LoginDto, SignupDTO, UpdateDTO } from './dto';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 
@@ -33,7 +34,7 @@ export class AuthService {
     } catch ({ code, message }) {
       let errorMessage = message;
 
-      errorMessage = code === 11000 && 'Account Already Exists!';
+      errorMessage = code === 11000 && 'Email Already Exists!';
 
       throw new HttpException(
         { msg: errorMessage },
@@ -53,7 +54,7 @@ export class AuthService {
        * @return @exception If User Not Found
        */
       if (!user) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('Invalid Email Or Password');
       }
       /**
        * Comparing Password
@@ -64,7 +65,7 @@ export class AuthService {
        * @throws @exception If Password is incorrect
        */
       if (!is_password_correct) {
-        throw new UnauthorizedException();
+        throw new UnauthorizedException('Invalid Email Or Password');
       }
 
       const token = this.generateJwt(user);
@@ -77,12 +78,64 @@ export class AuthService {
 
       return { token, user_details };
     } catch ({ code, message }) {
-      let errorMessage = message;
+      throw new HttpException({ msg: message }, HttpStatus.UNAUTHORIZED);
+    }
+  }
 
-      errorMessage =
-        message === 'Unauthorized' ? 'Invalid Email Or Password!' : message;
+  async update(body: UpdateDTO, id: string, token: any) {
+    const { name, email, password } = body;
+    try {
+      /**
+       * Find User
+       */
+      const user = await this.usersModel.findById(id);
 
-      throw new HttpException({ msg: errorMessage }, HttpStatus.UNAUTHORIZED);
+      /**
+       * Check Whether The Owner Is Trying To Update His Profile
+       *
+       * @true  Continue
+       *
+       * @false @throw Exception
+       */
+      const loggedInUser: any = this.jwtService.decode(token.split(' ')[1]);
+
+      if (!user._id.equals(loggedInUser.user_id)) {
+        throw new UnauthorizedException('Unauthorized!');
+      }
+
+      if (user.email !== email) {
+        /**
+         * Check Whether Email Is Already In Use Or Not
+         *
+         * @true @throw Exception
+         *
+         * @false Continue
+         */
+        const is_email_in_use = await this.usersModel.findOne({
+          email,
+        });
+
+        if (is_email_in_use) {
+          throw new BadRequestException('Email Already Exists!');
+        }
+        user.email = email;
+      }
+      if (password) {
+        /**
+         * Hashing Password
+         */
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash(password, salt);
+        user.password = hash;
+      }
+
+      user.name = name;
+
+      user.save();
+
+      return { msg: 'Profile Updated!' };
+    } catch ({ response }) {
+      throw new HttpException({ msg: response.message }, response.statusCode);
     }
   }
 
