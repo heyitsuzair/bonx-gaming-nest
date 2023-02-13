@@ -82,26 +82,17 @@ export class AuthService {
     }
   }
 
-  async update(body: UpdateDTO, id: string, token: any) {
+  async update(body: UpdateDTO, token: any) {
     const { name, email, password } = body;
     try {
       /**
-       * Find User
-       */
-      const user = await this.usersModel.findById(id);
-
-      /**
-       * Check Whether The Owner Is Trying To Update His Profile
-       *
-       * @true  Continue
-       *
-       * @false @throw Exception
+       * Get User Id From JWT
        */
       const loggedInUser: any = this.jwtService.decode(token.split(' ')[1]);
-
-      if (!user._id.equals(loggedInUser.user_id)) {
-        throw new UnauthorizedException('Unauthorized!');
-      }
+      /**
+       * Find User
+       */
+      const user = await this.usersModel.findById(loggedInUser.user_id);
 
       if (user.email !== email) {
         /**

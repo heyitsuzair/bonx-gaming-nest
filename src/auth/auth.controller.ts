@@ -24,10 +24,10 @@ export class AuthController {
   login(@Body() body: LoginDto) {
     return this.authService.login(body);
   }
-  @Put('/update/:id')
+  @Put('/update')
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
-  update(@Body() body: UpdateDTO, @Param('id') id: string, @Req() req: any) {
-    return this.authService.update(body, id, req.headers.authorization);
+  update(@Body() body: UpdateDTO, @Req() req: any) {
+    return this.authService.update(body, req.headers.authorization);
   }
 }
