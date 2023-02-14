@@ -137,4 +137,28 @@ export class GamesService {
       throw new HttpException({ msg: response.message }, response.statusCode);
     }
   }
+  async search(category: string, query: string) {
+    /**
+     * Object To Query In MongoDB
+     */
+    const toFind: any = {};
+
+    /**
+     * Check Whether Each Query Is Incoming
+     *
+     * @true Add A Query Object To @var toFind
+     *
+     * @false Continue
+     */
+    if (query) {
+      toFind.title = { $regex: new RegExp('.*' + query.toLowerCase(), 'i') };
+    }
+    if (category) {
+      toFind.category = { $regex: new RegExp('.*' + category, 'i') };
+    }
+
+    const games = await this.gamesModel.find(toFind);
+
+    return games;
+  }
 }

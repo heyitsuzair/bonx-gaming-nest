@@ -8,6 +8,7 @@ import {
   Get,
   Delete,
   Put,
+  Query,
 } from '@nestjs/common';
 import { Post, Body } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express/multer';
@@ -16,7 +17,7 @@ import { extname } from 'path';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { CreateGameDto } from './dto';
 import { GamesService } from './games.service';
-import { Request } from 'express';
+import { query, Request } from 'express';
 
 const multerOptions = {
   storage: diskStorage({
@@ -75,6 +76,11 @@ export class GamesController {
   @UseGuards(JwtAuthGuard)
   readOwnerGames(@Req() req: Request) {
     return this.gamesService.readOwnerGames(req.headers.authorization);
+  }
+
+  @Get('/search')
+  search(@Query('category') category: string, @Query('query') query: string) {
+    return this.gamesService.search(category, query);
   }
 
   @Get('/:id')
