@@ -31,8 +31,9 @@ export class GamesService {
   }
   async readGame(id: string) {
     try {
-      const game = await this.gamesModel.findById(id);
-
+      const game = await this.gamesModel
+        .findById(id)
+        .populate('owner_id', 'name');
       if (!game) {
         throw new NotFoundException('Game Not Found!');
       }

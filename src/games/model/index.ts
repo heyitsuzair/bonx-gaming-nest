@@ -51,6 +51,7 @@ export const GamesModel = new mongoose.Schema(
     },
     owner_id: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: 'users',
       required: true,
     },
   },
