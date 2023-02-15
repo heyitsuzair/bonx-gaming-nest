@@ -9,6 +9,7 @@ import { ModelsName } from '../../config';
 import { Model } from 'mongoose';
 import { CreateGameDto } from './dto';
 import { JwtService } from '@nestjs/jwt';
+import { deleteFile } from '../../utils';
 
 @Injectable()
 export class GamesService {
@@ -83,6 +84,37 @@ export class GamesService {
       if (!game.owner_id.equals(loggedInUser.user_id)) {
         throw new UnauthorizedException('Unauthorized!');
       }
+
+      const banner = game.banner;
+      /**
+       * Removing Forward Slashes From URL And Combining Strings To Make Path To Delete Image On Cloudinary
+       */
+      const removeForwardSlashesBanner = banner.split('/');
+      const pathBanner =
+        removeForwardSlashesBanner[7] +
+        '/' +
+        removeForwardSlashesBanner[8] +
+        '/' +
+        removeForwardSlashesBanner[9].split('.')[0];
+
+      const bannerPathWithoutPercent20 = decodeURIComponent(pathBanner);
+      await deleteFile(bannerPathWithoutPercent20);
+
+      const game_file = game.game_file.filename;
+      /**
+       * Removing Forward Slashes From URL And Combining Strings To Make Path To Delete File On Cloudinary
+       */
+      const removeForwardSlashesFile = game_file.split('/');
+      const pathFile =
+        removeForwardSlashesFile[7] +
+        '/' +
+        removeForwardSlashesFile[8] +
+        '/' +
+        removeForwardSlashesFile[9];
+
+      const filepathWithoutPercent20 = decodeURIComponent(pathFile);
+
+      await deleteFile(filepathWithoutPercent20);
 
       game.delete();
 

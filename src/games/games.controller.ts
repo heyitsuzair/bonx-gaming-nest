@@ -30,7 +30,6 @@ export class GamesController {
       body.game_file,
       '/gaming-mnrn/game_files/',
     );
-
     body.banner = uploadedBanner.url;
     body.game_file = {
       filename: uploadedFile.url,
