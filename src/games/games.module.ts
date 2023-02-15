@@ -5,16 +5,12 @@ import { ModelsName } from '../../config';
 import { JwtModule } from '@nestjs/jwt';
 import { GamesModel } from './model';
 import { MongooseModule } from '@nestjs/mongoose';
-import { MulterModule } from '@nestjs/platform-express';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: ModelsName.games, schema: GamesModel }]),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
-    }),
-    MulterModule.register({
-      dest: 'upload',
     }),
   ],
   providers: [GamesService],

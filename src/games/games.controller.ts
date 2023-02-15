@@ -15,9 +15,10 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express/multer';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { JwtAuthGuard } from 'src/auth/guards';
-import { CreateGameDto } from './dto';
+import { CreateGameDto, UpdateGameDto } from './dto';
 import { GamesService } from './games.service';
-import { query, Request } from 'express';
+import { Request } from 'express';
+import { uploadFile, uploadPicture } from 'utils';
 
 const multerOptions = {
   storage: diskStorage({
@@ -40,29 +41,20 @@ export class GamesController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  // You're not actually providing a file, but the interceptor will expect "form data"
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'game_file', maxCount: 1 },
-        { name: 'banner', maxCount: 1 },
-      ],
-      multerOptions,
-    ),
-  )
-  create(
-    @Body() body: CreateGameDto,
-    @UploadedFiles()
-    files: {
-      game_file?: any;
-      banner?: any;
-    },
-    @Req() req: Request,
-  ) {
-    body.banner = files.banner[0].filename;
+  async create(@Body() body: CreateGameDto, @Req() req: Request) {
+    const uploadedBanner = await uploadPicture(
+      body.banner,
+      '/gaming-mnrn/banners/',
+    );
+    const uploadedFile = await uploadFile(
+      body.game_file,
+      '/gaming-mnrn/game_files/',
+    );
+
+    body.banner = uploadedBanner.url;
     body.game_file = {
-      filename: files.game_file[0].filename,
-      size: files.game_file[0].size,
+      filename: uploadedFile.url,
+      size: uploadedFile.bytes,
     };
     return this.gamesService.create(body, req.headers.authorization);
   }
@@ -95,33 +87,29 @@ export class GamesController {
   }
   @Put('/:id')
   @UseGuards(JwtAuthGuard)
-  // You're not actually providing a file, but the interceptor will expect "form data"
-  @UseInterceptors(
-    FileFieldsInterceptor(
-      [
-        { name: 'game_file', maxCount: 1 },
-        { name: 'banner', maxCount: 1 },
-      ],
-      multerOptions,
-    ),
-  )
-  update(
-    @Body() body: CreateGameDto,
-    @UploadedFiles()
-    files: {
-      game_file?: any;
-      banner?: any;
-    },
+  async update(
+    @Body() body: UpdateGameDto,
     @Param('id') id: string,
     @Req() req: Request,
   ) {
-    body.banner = files.banner ? files.banner[0].filename : null;
-    body.game_file = files.game_file
-      ? {
-          filename: files.game_file[0].filename,
-          size: files.game_file[0].size,
-        }
-      : null;
+    if (body.banner) {
+      const uploadedBanner = await uploadPicture(
+        body.banner,
+        '/gaming-mnrn/banners/',
+      );
+      body.banner = uploadedBanner.url;
+    }
+    if (body.game_file) {
+      const uploadedFile = await uploadFile(
+        body.game_file,
+        '/gaming-mnrn/game_files/',
+      );
+
+      body.game_file = {
+        filename: uploadedFile.url,
+        size: uploadedFile.bytes,
+      };
+    }
     return this.gamesService.update(body, req.headers.authorization, id);
   }
 }
