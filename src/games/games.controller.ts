@@ -18,7 +18,7 @@ import { JwtAuthGuard } from 'src/auth/guards';
 import { CreateGameDto, UpdateGameDto } from './dto';
 import { GamesService } from './games.service';
 import { Request } from 'express';
-import { uploadFile, uploadPicture } from 'utils';
+import { uploadFile, uploadPicture } from '../../utils';
 
 const multerOptions = {
   storage: diskStorage({
