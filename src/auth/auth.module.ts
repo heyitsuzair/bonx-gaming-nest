@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ModelsName, env } from 'config';
+import { ModelsName } from 'config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersModel } from './model';
@@ -11,7 +11,7 @@ import { JwtStrategy } from './strategies';
   imports: [
     MongooseModule.forFeature([{ name: ModelsName.users, schema: UsersModel }]),
     JwtModule.register({
-      secret: env.jwt.secret,
+      secret: process.env.JWT_SECRET,
     }),
   ],
   controllers: [AuthController],
