@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ModelsName } from 'config';
+import { ModelsName } from '../../config';
 import { Model } from 'mongoose';
 import { LoginDto, SignupDTO, UpdateDTO } from './dto';
 import * as bcrypt from 'bcryptjs';

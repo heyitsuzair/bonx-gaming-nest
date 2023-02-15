@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { ModelsName } from 'config';
+import { ModelsName } from '../../config';
 import { Model } from 'mongoose';
 import { CreateGameDto } from './dto';
 import { JwtService } from '@nestjs/jwt';
