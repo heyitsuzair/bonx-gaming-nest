@@ -1,7 +1,5 @@
 import {
   Controller,
-  UseInterceptors,
-  UploadedFiles,
   UseGuards,
   Req,
   Param,
@@ -11,29 +9,11 @@ import {
   Query,
 } from '@nestjs/common';
 import { Post, Body } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express/multer';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { CreateGameDto, UpdateGameDto } from './dto';
 import { GamesService } from './games.service';
 import { Request } from 'express';
 import { uploadFile, uploadPicture } from '../../utils';
-
-const multerOptions = {
-  storage: diskStorage({
-    destination: './uploads',
-    filename: (req, file, cb) => {
-      // Generating a 32 random chars long string
-      const randomName = Array(32)
-        .fill(null)
-        .map(() => Math.round(Math.random() * 16).toString(16))
-        .join('');
-      //Calling the callback passing the random name generated with the original extension
-      cb(null, `${randomName}${extname(file.originalname)}`);
-    },
-  }),
-};
 
 @Controller('/api/games')
 export class GamesController {
